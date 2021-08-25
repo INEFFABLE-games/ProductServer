@@ -2,10 +2,41 @@ package server
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/go-redis/redis/v8"
+	"github.com/segmentio/kafka-go"
+	"log"
+	"main/src/internal/models"
+	"time"
 )
 
+func getRedis() *redis.Client {
+	var (
+		RedisAddres    = "redis-14436.c54.ap-northeast-1-2.ec2.cloud.redislabs.com:14436"
+		RedisPassword  = "Drektarov3698!"
+		ReddisUserName = "Admin"
+	)
+
+	client := redis.NewClient(&redis.Options{
+		Addr:     RedisAddres,
+		Password: RedisPassword,
+		Username: ReddisUserName,
+		DB:       0,
+	})
+
+	res, err := client.Ping(context.Background()).Result()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(res)
+
+	return client
+}
+
 func Start(ctx context.Context) {
-	/*topic := "my-topic"
+	topic := "products"
 
 	//ip := os.Getenv("ZADDRES")
 
@@ -16,6 +47,8 @@ func Start(ctx context.Context) {
 		MaxBytes: 10,
 	}
 
+	redisClient := getRedis()
+
 	reader := kafka.NewReader(conf)
 
 	for {
@@ -25,11 +58,22 @@ func Start(ctx context.Context) {
 			continue
 		}
 
-		err = json.Unmarshal(m.Value,&models.Product{}); if err != nil{
+		prod := models.Product{}
+
+		err = json.Unmarshal(m.Value, &prod)
+		if err != nil {
 			fmt.Println(err)
 		}
+		jprod, err := json.Marshal(prod)
+		if err != nil {
+			log.Println(err)
+		}
+		redisClient.Set(ctx, "product", jprod, 1*time.Second)
+		redisClient.Set(ctx, "product1", jprod, 1*time.Second)
 
-		time.Sleep(1 * time.Second)
-	}*/
+		fmt.Printf("new product: %v\n", prod)
+
+		time.Sleep(3 * time.Second)
+	}
 
 }
